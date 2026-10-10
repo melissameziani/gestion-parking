@@ -1,15 +1,22 @@
 #model.py
+import os
+
 import mysql.connector
+
+# Paramètres de connexion : modifiables avec des variables d'environnement,
+# sinon valeurs par défaut de XAMPP (utilisateur root sans mot de passe)
+DB_CONFIG = {
+    "host": os.getenv("PARKING_DB_HOST", "localhost"),
+    "user": os.getenv("PARKING_DB_USER", "root"),
+    "password": os.getenv("PARKING_DB_PASSWORD", ""),
+    "database": os.getenv("PARKING_DB_NAME", "gestion_parking"),
+}
+
 
 class ParkingModel:
     def __init__(self):
         try:
-            self.connection = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="gestion_parking"
-            )
+            self.connection = mysql.connector.connect(**DB_CONFIG)
             self.cursor = self.connection.cursor()
         except mysql.connector.Error as err:
             print(f"Erreur de connexion à la base de données: {err}")
@@ -133,11 +140,24 @@ class ParkingModel:
         except mysql.connector.Error as err:
             print(f"Erreur lors de l'enregistrement de la sortie: {err}")
 
+    def fermer(self):
+        """
+        Ferme proprement le curseur et la connexion à la base de données.
+        """
+        try:
+            if getattr(self, 'cursor', None) is not None:
+                self.cursor.close()
+            if getattr(self, 'connection', None) is not None and self.connection.is_connected():
+                self.connection.close()
+        except (mysql.connector.Error, ReferenceError):
+            pass
+        finally:
+            self.cursor = None
+            self.connection = None
+
     def __del__(self):
-        if hasattr(self, 'cursor'):
-            self.cursor.close()
-        if hasattr(self, 'connection'):
-            self.connection.close()
+        self.fermer()
+
     def verifier_disponibilite_par_type(self, type_vehicule):
         """
         Retourne toutes les places disponibles pour un type de véhicule donné.
@@ -154,7 +174,7 @@ class ParkingModel:
             print(f"Erreur lors de la vérification de disponibilité par type: {err}")
             return []
 
-def verifier_disponibilite_date_heure(self, date_reservation, heure_debut, heure_fin):
+    def verifier_disponibilite_date_heure(self, date_reservation, heure_debut, heure_fin):
         """
         Retourne les places disponibles pour une date et une période donnée.
         """

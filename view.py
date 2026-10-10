@@ -1,7 +1,7 @@
 #view.py
 import tkinter as tk
-from tkinter import ttk, messagebox
-from tkcalendar import DateEntry  # Importer le calendrier
+from datetime import date
+from tkinter import ttk
 
 class ParkingView:
     def __init__(self, root, controller):
@@ -76,22 +76,23 @@ class ParkingView:
 
         # Jour (1 à 31)
         self.jour_entry = ttk.Combobox(date_frame, values=[f"{i:02d}" for i in range(1, 32)], width=3, font=("Helvetica", 12))
-        self.jour_entry.set("01")  # Valeur par défaut
         self.jour_entry.grid(row=0, column=0)
 
         ttk.Label(date_frame, text="/", style="TLabel").grid(row=0, column=1)
 
         # Mois (1 à 12)
         self.mois_entry = ttk.Combobox(date_frame, values=[f"{i:02d}" for i in range(1, 13)], width=3, font=("Helvetica", 12))
-        self.mois_entry.set("01")  # Valeur par défaut
         self.mois_entry.grid(row=0, column=2)
 
         ttk.Label(date_frame, text="/", style="TLabel").grid(row=0, column=3)
 
-        # Année (2023 à 2030)
-        self.annee_entry = ttk.Combobox(date_frame, values=[f"{i}" for i in range(2023, 2031)], width=5, font=("Helvetica", 12))
-        self.annee_entry.set("2023")  # Valeur par défaut
+        # Année (de l'année en cours à +5 ans)
+        annee_actuelle = date.today().year
+        self.annee_entry = ttk.Combobox(date_frame, values=[f"{i}" for i in range(annee_actuelle, annee_actuelle + 6)], width=5, font=("Helvetica", 12))
         self.annee_entry.grid(row=0, column=4)
+
+        # Par défaut : la date du jour
+        self.date_par_defaut()
 
         # Heure de début
         ttk.Label(form_frame, text="Heure de début :").grid(row=4, column=0, padx=10, pady=10)
@@ -180,15 +181,22 @@ class ParkingView:
         ttk.Button(form_frame, text="Enregistrer l'entrée", command=self.controller.enregistrer_entree, style="TButton").grid(row=1, column=0, padx=10, pady=10)
         ttk.Button(form_frame, text="Enregistrer la sortie", command=self.controller.enregistrer_sortie, style="TButton").grid(row=1, column=1, padx=10, pady=10)
 
+    def date_par_defaut(self):
+        """
+        Place la date du jour dans le sélecteur de date de réservation.
+        """
+        aujourd_hui = date.today()
+        self.jour_entry.set(f"{aujourd_hui.day:02d}")
+        self.mois_entry.set(f"{aujourd_hui.month:02d}")
+        self.annee_entry.set(f"{aujourd_hui.year}")
+
     def vider_champs_reservation(self):
         """
         Efface le contenu des champs du formulaire de réservation.
         """
         self.numero_place_entry.delete(0, tk.END)
         self.nom_utilisateur_entry.delete(0, tk.END)
-        self.jour_entry.set("01")  # Réinitialiser le jour
-        self.mois_entry.set("01")  # Réinitialiser le mois
-        self.annee_entry.set("2023")  # Réinitialiser l'année
+        self.date_par_defaut()  # Remettre la date du jour
         self.heure_debut_h.set("00")  # Réinitialiser l'heure de début
         self.heure_debut_m.set("00")
         self.heure_fin_h.set("00")  # Réinitialiser l'heure de fin
